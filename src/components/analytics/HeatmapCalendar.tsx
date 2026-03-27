@@ -9,6 +9,7 @@ import {
   endOfMonth,
   eachDayOfInterval,
   parseISO,
+  isToday,
 } from 'date-fns'
 import { ChevronLeft, ChevronRight, CheckCircle2, XCircle } from 'lucide-react'
 import { useHeatmap, useHeatmapDetail, HeatmapDay } from '@/hooks/useHeatmap'
@@ -103,7 +104,8 @@ export function HeatmapCalendar() {
                 key={day.date}
                 className={clsx(
                   styles.dayCell,
-                  getRateColor(day.rate, day.scheduled)
+                  getRateColor(day.rate, day.scheduled),
+                  isToday(parseISO(day.date)) && styles.dayCellToday
                 )}
                 onClick={() => handleDayClick(day)}
                 disabled={day.scheduled === 0}

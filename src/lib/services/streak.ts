@@ -140,17 +140,29 @@ function isScheduled(habit: Habit, date: Date): boolean {
 
   if (habit.frequency === 'WEEKLY') {
     if (!habit.weeklyDays || habit.weeklyDays.length === 0) return false
-    // Use standard Date methods
     const dayOfWeek = date.getUTCDay() // 0=Sun...
     const adjustedDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1
-    return habit.weeklyDays.includes(adjustedDay)
+    try {
+      return (
+        JSON.parse((habit.weeklyDays as unknown as string) || '[]') as number[]
+      ).includes(adjustedDay)
+    } catch {
+      return false
+    }
   }
 
   if (habit.frequency === 'MONTHLY') {
     if (!habit.monthlyDates || habit.monthlyDates.length === 0) return false
-    // Use standard Date methods
     const dom = date.getUTCDate()
-    return habit.monthlyDates.includes(dom)
+    try {
+      return (
+        JSON.parse(
+          (habit.monthlyDates as unknown as string) || '[]'
+        ) as number[]
+      ).includes(dom)
+    } catch {
+      return false
+    }
   }
 
   return false

@@ -47,10 +47,26 @@ export async function GET(
         // Check Frequency
         if (habit.frequency === 'DAILY') return true
         if (habit.frequency === 'WEEKLY') {
-          return habit.weeklyDays.includes(getDay(targetDate))
+          try {
+            return (
+              JSON.parse(
+                (habit.weeklyDays as unknown as string) || '[]'
+              ) as number[]
+            ).includes(getDay(targetDate))
+          } catch {
+            return false
+          }
         }
         if (habit.frequency === 'MONTHLY') {
-          return habit.monthlyDates.includes(getDate(targetDate))
+          try {
+            return (
+              JSON.parse(
+                (habit.monthlyDates as unknown as string) || '[]'
+              ) as number[]
+            ).includes(getDate(targetDate))
+          } catch {
+            return false
+          }
         }
         return false
       })

@@ -19,6 +19,32 @@
     width: 100%;
     height: 100%;
     display: block;
+    filter: drop-shadow(0 8px 16px rgba(162, 28, 175, 0.2));
+}
+
+.mascotBody {
+    fill: url(#voraGradient);
+    stroke: var(--color-primary-400);
+    stroke-width: 2;
+}
+
+.mascotEye {
+    fill: white;
+}
+
+.mascotPupil {
+    fill: #1e1b4b;
+}
+
+.mascotMouth {
+    stroke: #1e1b4b;
+    stroke-width: 2.5;
+    fill: none;
+    stroke-linecap: round;
+}
+
+.mascotBlush {
+    fill: rgba(244, 114, 182, 0.4);
 }
 
 /* Transitions */
@@ -125,15 +151,38 @@
 }
 
 @keyframes mascotEncourage {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+}
 
-    0%,
-    100% {
-        transform: scale(1);
-    }
+/* Part Animations */
+.eyeBlink {
+    animation: eyeBlink 4s infinite;
+    transform-origin: center;
+}
 
-    50% {
-        transform: scale(1.05);
-    }
+@keyframes eyeBlink {
+    0%, 90%, 100% { transform: scaleY(1); }
+    95% { transform: scaleY(0.1); }
+}
+
+.floating {
+    animation: floating 3s ease-in-out infinite;
+}
+
+@keyframes floating {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+
+.armWave {
+    animation: armWave 1.5s ease-in-out infinite;
+    transform-origin: bottom left;
+}
+
+@keyframes armWave {
+    0%, 100% { transform: rotate(0deg); }
+    50% { transform: rotate(-20deg); }
 }
 
 /* Reduced Motion */

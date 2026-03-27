@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { Priority, Recurrence } from '@prisma/client'
+import { Priority, Recurrence } from '@/types/enums'
 import { sanitizeTransform, sanitizeOptionalInput } from '@/lib/sanitize'
 
 const subTaskSchema = z.object({

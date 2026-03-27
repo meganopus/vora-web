@@ -59,7 +59,7 @@ export async function PATCH(
       const existing = await prisma.category.findFirst({
         where: {
           userId,
-          name: { equals: validatedData.name, mode: 'insensitive' },
+          name: { contains: validatedData.name },
           deletedAt: null,
           NOT: { id },
         },

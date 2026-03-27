@@ -68,10 +68,15 @@ export async function PATCH(
       }
     }
 
+    const { weeklyDays, monthlyDates, ...restData } = validatedData
     // Update habit
     const updatedHabit = await prisma.habit.update({
       where: { id },
-      data: validatedData,
+      data: {
+        ...restData,
+        weeklyDays: weeklyDays ? JSON.stringify(weeklyDays) : undefined,
+        monthlyDates: monthlyDates ? JSON.stringify(monthlyDates) : undefined,
+      },
       include: { category: true },
     })
 

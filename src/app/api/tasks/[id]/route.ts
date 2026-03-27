@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth, handleAuthError } from '@/lib/auth'
-import { Recurrence } from '@prisma/client'
+import { Recurrence } from '@/types/enums'
 import { updateTaskSchema } from '@/lib/validations/task'
 import { processTaskRecurrence } from '@/lib/services/recurrence'
 

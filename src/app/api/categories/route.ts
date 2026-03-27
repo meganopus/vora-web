@@ -78,7 +78,7 @@ export async function POST(req: Request) {
     const existing = await prisma.category.findFirst({
       where: {
         userId,
-        name: { equals: validatedData.name, mode: 'insensitive' },
+        name: { equals: validatedData.name },
         deletedAt: null,
       },
     })

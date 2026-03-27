@@ -5,7 +5,7 @@ import {
   createMoodCheckinSchema,
   moodQuerySchema,
 } from '@/lib/validations/mood'
-import { Mood, Activity } from '@prisma/client'
+import { Mood, Activity } from '@/types/enums'
 import { startOfDay } from 'date-fns'
 
 export async function GET(req: Request) {

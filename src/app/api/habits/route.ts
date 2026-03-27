@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth, handleAuthError } from '@/lib/auth'
 import { createHabitSchema } from '@/lib/validations/habit'
-import { Frequency } from '@prisma/client'
+import { Frequency } from '@/types/enums'
 
 export async function GET(req: Request) {
   try {
@@ -27,22 +27,11 @@ export async function GET(req: Request) {
       const brDayOfWeek = dayOfWeek === 0 ? 6 : dayOfWeek - 1
       const dayOfMonth = date.getUTCDate()
 
-      const habits = await prisma.habit.findMany({
+      const allHabits = await prisma.habit.findMany({
         where: {
           userId,
           deletedAt: null,
           isActive: true,
-          OR: [
-            { frequency: 'DAILY' },
-            {
-              frequency: 'WEEKLY',
-              weeklyDays: { has: brDayOfWeek },
-            },
-            {
-              frequency: 'MONTHLY',
-              monthlyDates: { has: dayOfMonth },
-            },
-          ],
         },
         include: {
           category: true,
@@ -58,8 +47,31 @@ export async function GET(req: Request) {
         orderBy: [{ category: { sortOrder: 'asc' } }, { sortOrder: 'asc' }],
       })
 
+      // In-memory filter for SQLite (no native JSON/array 'has' support)
+      // Safe to do because user active habits are capped at 50
+      const targetHabits = allHabits.filter((h) => {
+        if (h.frequency === 'DAILY') return true
+        if (h.frequency === 'WEEKLY') {
+          try {
+            const days: number[] = JSON.parse(h.weeklyDays || '[]')
+            return days.includes(brDayOfWeek)
+          } catch {
+            return false
+          }
+        }
+        if (h.frequency === 'MONTHLY') {
+          try {
+            const dates: number[] = JSON.parse(h.monthlyDates || '[]')
+            return dates.includes(dayOfMonth)
+          } catch {
+            return false
+          }
+        }
+        return false
+      })
+
       // Flatten isCompleted status
-      const formattedHabits = habits.map((habit) => {
+      const formattedHabits = targetHabits.map((habit) => {
         const { completions, ...rest } = habit
         return {
           ...rest,
@@ -124,12 +136,15 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid category' }, { status: 422 })
     }
 
+    const { weeklyDays, monthlyDates, ...restData } = validatedData
     // Create habit
     const habit = await prisma.habit.create({
       data: {
-        ...validatedData,
+        ...restData,
         userId,
-        frequency: validatedData.frequency as Frequency,
+        frequency: restData.frequency as Frequency,
+        weeklyDays: weeklyDays ? JSON.stringify(weeklyDays) : '[]',
+        monthlyDates: monthlyDates ? JSON.stringify(monthlyDates) : '[]',
       },
       include: {
         category: true,

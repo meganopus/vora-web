@@ -2,11 +2,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  position: relative;
   width: 100%;
-  max-width: 300px;
   margin: 0 auto;
+}
+
+.progressWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .svg {
@@ -19,14 +23,14 @@
 
 .circleBg {
   fill: none;
-  stroke: var(--vora-color-bg-tertiary); /* background color for the track */
-  stroke-width: 8;
+  stroke: var(--color-primary-50); /* background color for the track */
+  stroke-width: 12;
   position: absolute;
 }
 
 .circleProgress {
   fill: none;
-  stroke-width: 8;
+  stroke-width: 12;
   stroke-linecap: round;
   transition: stroke-dashoffset var(--vora-duration-emphasis) var(--vora-easing-default);
 }
@@ -52,11 +56,11 @@
 
 .label {
   font-family: var(--vora-font-family);
-  font-size: var(--vora-font-size-body);
-  font-weight: var(--vora-font-weight-medium);
-  color: var(--vora-color-text-secondary);
+  font-size: var(--vora-font-size-caption);
+  font-weight: var(--vora-font-weight-semibold);
+  color: var(--vora-color-text-tertiary);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.1em;
   margin-top: var(--vora-space-1);
 }
 

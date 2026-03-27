@@ -1,5 +1,5 @@
 import { addDays, addWeeks, addMonths } from 'date-fns'
-import { Recurrence } from '@prisma/client'
+import { Recurrence } from '@/types/enums'
 
 /**
  * calculateNextDueDate

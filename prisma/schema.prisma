@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
 }
 
 // ── NextAuth Entities ──
@@ -19,11 +19,11 @@ model User {
   emailVerified  DateTime? @map("email_verified")
   image          String?
   avatarUrl      String?   @map("avatar_url")
-  theme          Theme     @default(SYSTEM)
-  
+  theme          String    @default("SYSTEM")
+
   failedLoginAttempts Int       @default(0) @map("failed_login_attempts")
   lockedUntil         DateTime? @map("locked_until")
-  
+
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
   deletedAt      DateTime? @map("deleted_at")
@@ -45,12 +45,12 @@ model Account {
   type              String
   provider          String
   providerAccountId String  @map("provider_account_id")
-  refreshToken      String? @map("refresh_token") @db.Text
-  accessToken       String? @map("access_token") @db.Text
+  refreshToken      String? @map("refresh_token")
+  accessToken       String? @map("access_token")
   expiresAt         Int?    @map("expires_at")
   tokenType         String? @map("token_type")
   scope             String?
-  idToken           String? @map("id_token") @db.Text
+  idToken           String? @map("id_token")
   sessionState      String? @map("session_state")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -96,11 +96,11 @@ model Habit {
   categoryId   String    @map("category_id")
   name         String
   color        String
-  frequency    Frequency
+  frequency    String    // DAILY | WEEKLY | MONTHLY
   targetValue  Int?      @map("target_value")
   targetUnit   String?   @map("target_unit")
-  weeklyDays   Int[]     @map("weekly_days")
-  monthlyDates Int[]     @map("monthly_dates")
+  weeklyDays   String    @default("[]") @map("weekly_days")    // JSON array e.g. "[0,1,2]"
+  monthlyDates String    @default("[]") @map("monthly_dates")  // JSON array e.g. "[1,15]"
   reminderTime String?   @map("reminder_time")
   isActive     Boolean   @default(true) @map("is_active")
   sortOrder    Int       @default(0) @map("sort_order")
@@ -108,42 +108,42 @@ model Habit {
   updatedAt    DateTime  @updatedAt @map("updated_at")
   deletedAt    DateTime? @map("deleted_at")
 
-  user        User              @relation(fields: [userId], references: [id])
-  category    Category          @relation(fields: [categoryId], references: [id])
-  completions HabitCompletion[]
+  user         User              @relation(fields: [userId], references: [id])
+  category     Category          @relation(fields: [categoryId], references: [id])
+  completions  HabitCompletion[]
   moodCheckins MoodCheckin[]
 
   @@map("habits")
 }
 
 model HabitCompletion {
-  id          String   @id @default(uuid())
-  habitId     String   @map("habit_id")
-  userId      String   @map("user_id")
-  date        DateTime @db.Date
+  id          String    @id @default(uuid())
+  habitId     String    @map("habit_id")
+  userId      String    @map("user_id")
+  date        DateTime
   value       Int?
-  completedAt DateTime @default(now()) @map("completed_at")
+  completedAt DateTime  @default(now()) @map("completed_at")
   deletedAt   DateTime? @map("deleted_at")
 
-  habit        Habit         @relation(fields: [habitId], references: [id])
-  user         User          @relation(fields: [userId], references: [id])
-  moodCheckin  MoodCheckin?
+  habit       Habit       @relation(fields: [habitId], references: [id])
+  user        User        @relation(fields: [userId], references: [id])
+  moodCheckin MoodCheckin?
 
   @@unique([habitId, date])
   @@map("habit_completions")
 }
 
 model MoodCheckin {
-  id               String   @id @default(uuid())
-  userId           String   @map("user_id")
-  habitId          String   @map("habit_id")
-  completionId     String   @unique @map("completion_id")
-  date             DateTime @db.Date
-  mood             Mood
-  isPositive       Boolean  @map("is_positive")
-  reflectionText   String?  @map("reflection_text") @db.VarChar(500)
-  selectedActivity Activity? @map("selected_activity")
-  createdAt        DateTime @default(now()) @map("created_at")
+  id               String    @id @default(uuid())
+  userId           String    @map("user_id")
+  habitId          String    @map("habit_id")
+  completionId     String    @unique @map("completion_id")
+  date             DateTime
+  mood             String    // HAPPY | PROUD | WORRIED | ANNOYED | SAD | ANGRY
+  isPositive       Boolean   @map("is_positive")
+  reflectionText   String?   @map("reflection_text")
+  selectedActivity String?   @map("selected_activity") // SHORT_BREAK | DEEP_BREATHING | etc.
+  createdAt        DateTime  @default(now()) @map("created_at")
   deletedAt        DateTime? @map("deleted_at")
 
   user       User            @relation(fields: [userId], references: [id])
@@ -158,12 +158,12 @@ model Task {
   id              String    @id @default(uuid())
   userId          String    @map("user_id")
   title           String
-  description     String?   @db.Text
-  priority        Priority  @default(MEDIUM)
-  dueDate         DateTime? @map("due_date") @db.Date
-  originalDueDate DateTime? @map("original_due_date") @db.Date
-  recurrence      Recurrence @default(NONE)
-  recurrenceRule  Json?     @map("recurrence_rule")
+  description     String?
+  priority        String    @default("MEDIUM") // HIGH | MEDIUM | LOW
+  dueDate         DateTime? @map("due_date")
+  originalDueDate DateTime? @map("original_due_date")
+  recurrence      String    @default("NONE") // NONE | DAILY | WEEKLY | MONTHLY | CUSTOM
+  recurrenceRule  String?   @map("recurrence_rule") // JSON string
   autoPostpone    Boolean   @default(false) @map("auto_postpone")
   completedAt     DateTime? @map("completed_at")
   sortOrder       Int       @default(0) @map("sort_order")
@@ -172,11 +172,11 @@ model Task {
   updatedAt       DateTime  @updatedAt @map("updated_at")
   deletedAt       DateTime? @map("deleted_at")
 
-  user             User              @relation(fields: [userId], references: [id])
-  parentTask       Task?             @relation("TaskRecurrence", fields: [parentTaskId], references: [id])
-  childTasks       Task[]            @relation("TaskRecurrence")
-  subTasks         SubTask[]
-  postponeHistory  PostponeHistory[]
+  user            User              @relation(fields: [userId], references: [id])
+  parentTask      Task?             @relation("TaskRecurrence", fields: [parentTaskId], references: [id])
+  childTasks      Task[]            @relation("TaskRecurrence")
+  subTasks        SubTask[]
+  postponeHistory PostponeHistory[]
 
   @@map("tasks")
 }
@@ -197,58 +197,12 @@ model SubTask {
 model PostponeHistory {
   id        String   @id @default(uuid())
   taskId    String   @map("task_id")
-  fromDate  DateTime @map("from_date") @db.Date
-  toDate    DateTime @map("to_date") @db.Date
+  fromDate  DateTime @map("from_date")
+  toDate    DateTime @map("to_date")
   reason    String   @default("auto")
   createdAt DateTime @default(now()) @map("created_at")
 
   task Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@map("postpone_history")
-}
-
-// ── Enums ──
-
-enum Theme {
-  LIGHT
-  DARK
-  SYSTEM
-}
-
-enum Frequency {
-  DAILY
-  WEEKLY
-  MONTHLY
-}
-
-enum Mood {
-  HAPPY
-  PROUD
-  WORRIED
-  ANNOYED
-  SAD
-  ANGRY
-}
-
-enum Priority {
-  HIGH
-  MEDIUM
-  LOW
-}
-
-enum Recurrence {
-  NONE
-  DAILY
-  WEEKLY
-  MONTHLY
-  CUSTOM
-}
-
-enum Activity {
-  SHORT_BREAK
-  DEEP_BREATHING
-  CALMING_MUSIC
-  TALK_TO_SOMEONE
-  GO_FOR_WALK
-  STAY_HYDRATED
 }

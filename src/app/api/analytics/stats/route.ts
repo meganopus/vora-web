@@ -100,10 +100,26 @@ export async function GET(_req: NextRequest) {
         // Check Frequency
         if (habit.frequency === 'DAILY') return true
         if (habit.frequency === 'WEEKLY') {
-          return habit.weeklyDays.includes(getDay(day))
+          try {
+            return (
+              JSON.parse(
+                (habit.weeklyDays as unknown as string) || '[]'
+              ) as number[]
+            ).includes(getDay(day))
+          } catch {
+            return false
+          }
         }
         if (habit.frequency === 'MONTHLY') {
-          return habit.monthlyDates.includes(getDate(day))
+          try {
+            return (
+              JSON.parse(
+                (habit.monthlyDates as unknown as string) || '[]'
+              ) as number[]
+            ).includes(getDate(day))
+          } catch {
+            return false
+          }
         }
         return false
       })

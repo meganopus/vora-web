@@ -15,7 +15,8 @@
 .dateDisplay {
     display: flex;
     align-items: center;
-    background: var(--vora-color-bg-secondary);
+    background: var(--vora-color-bg-primary);
+    border: 1.5px solid var(--color-primary-200);
     padding: var(--vora-space-2) var(--vora-space-4);
     border-radius: var(--vora-radius-full);
     gap: var(--vora-space-3);
@@ -24,12 +25,13 @@
 }
 
 .dateDisplay:hover {
-    background: var(--vora-color-bg-tertiary);
+    background: var(--color-primary-50);
+    border-color: var(--color-primary-400);
     box-shadow: var(--vora-shadow-sm);
 }
 
 .dateIcon {
-    color: var(--vora-color-accent-primary);
+    color: var(--color-primary-500);
 }
 
 .dateText {
@@ -55,8 +57,9 @@
 }
 
 .navBtn:hover:not(:disabled) {
-    background: var(--vora-color-accent-subtle);
-    color: var(--vora-color-accent-primary);
+    background: var(--color-primary-50);
+    color: var(--color-primary-500);
+    border-color: var(--color-primary-200);
     transform: scale(1.05);
 }
 
@@ -67,7 +70,7 @@
 
 .todayChip {
     font-size: var(--vora-font-size-caption);
-    background: var(--vora-color-accent-primary);
+    background: var(--color-primary-500);
     color: var(--vora-color-text-inverse);
     border: none;
     padding: 4px 12px;
@@ -131,8 +134,8 @@
 }
 
 .monthNavBtn:hover {
-    background: var(--vora-color-bg-tertiary);
-    color: var(--vora-color-accent-primary);
+    background: var(--color-primary-50);
+    color: var(--color-primary-500);
 }
 
 .weekDays {
@@ -177,13 +180,14 @@
 }
 
 .dayCellToday {
-    border-color: var(--vora-color-accent-primary);
+    border: 2px solid var(--color-primary-500);
     font-weight: var(--vora-font-weight-bold);
 }
 
 .dayCellSelected {
-    background: var(--vora-color-accent-primary);
+    background: var(--color-primary-500);
     color: var(--vora-color-text-inverse);
+    box-shadow: 0 2px 4px rgba(217, 70, 239, 0.3);
 }
 
 .dayCellDisabled {
@@ -199,9 +203,9 @@
 
 .completionDot {
     position: absolute;
-    bottom: 2px;
-    width: 4px;
-    height: 4px;
+    bottom: 4px;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
     background: var(--vora-color-success);
 }

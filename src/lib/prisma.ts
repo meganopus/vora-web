@@ -1,6 +1,6 @@
-import { Pool } from 'pg'
-import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '@prisma/client'
+
+import { PrismaLibSql } from '@prisma/adapter-libsql'
 
 const softDeleteModels = [
   'User',
@@ -15,16 +15,18 @@ const camelCase = (str: string) => {
   return str.charAt(0).toLowerCase() + str.slice(1)
 }
 
-// Prisma v7 requires a driver adapter for the default "client" engine.
 const prismaClientSingleton = () => {
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-  })
-  const adapter = new PrismaPg(pool)
+  // Turbopack / Webpack sometimes causes process.env.DATABASE_URL to be "undefined"
+  // Prisma 7 reads this env var internally and passes it to PrismaLibSql, throwing an error if it's invalid
+  if (!process.env.DATABASE_URL || process.env.DATABASE_URL === 'undefined') {
+    process.env.DATABASE_URL = 'file:./dev.db'
+  }
 
-  const client = new PrismaClient({
-    adapter,
+  // Prisma 7 requires adapting the database driver when URL isn't in schema
+  const adapter = new PrismaLibSql({
+    url: process.env.DATABASE_URL,
   })
+  const client = new PrismaClient({ adapter })
 
   return client.$extends({
     name: 'soft-delete',
