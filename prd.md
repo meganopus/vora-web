@@ -9,8 +9,8 @@
 | Field               | Detail                                                                                           |
 | ------------------- | ------------------------------------------------------------------------------------------------ |
 | **Product Name**    | Vora                                                                                             |
-| **Document Version**| 2.0                                                                                              |
-| **Last Updated**    | 2026-02-10                                                                                       |
+| **Document Version**| 3.0                                                                                              |
+| **Last Updated**    | 2026-03-25                                                                                       |
 | **Status**          | Draft                                                                                            |
 | **Product Owner**   | [Product Owner Name]                                                                             |
 | **Designers**       | [Design Team]                                                                                    |
@@ -138,21 +138,18 @@ The application is designed as a **Progressive Web App (PWA)** to deliver a nati
 
 #### ✅ In-Scope (MVP 1)
 
-| # | Feature                                                      | Details                                                                                      |
-|---|--------------------------------------------------------------|----------------------------------------------------------------------------------------------|
-| 1 | **Habit Dashboard (Home)**                                   | Daily habit list, interactive calendar, category sidebar, completion checkboxes, integrated to-do list |
-| 2 | **Habit CRUD**                                               | Create, read, update, delete habits with name, category, color, frequency (daily/weekly/monthly), and notification settings |
-| 3 | **Smart Daily Check-in & Mood Board**                        | Modal triggered on habit completion; 6 mood options; positive path (congrats + mascot); negative path (empathy + reflection + calming activity suggestions); data persistence |
-| 4 | **Task Management**                                          | Task CRUD, sub-tasks, priority levels (high/medium/low), due dates, auto-postpone toggle, recurrence settings, sorting & filtering |
-| 5 | **Analytics Dashboard**                                      | Completion rate (circular progress), line chart (weekly/monthly/yearly), streak/perfect/active day stats, calendar heatmap |
-| 6 | **Responsive Design**                                        | Mobile-first (320px min), tablet (768px), desktop (1024px+). Bottom nav → sidebar on desktop |
-| 7 | **Theme System**                                             | Light & dark mode, custom color per habit, predefined palette (8–12 colors)                  |
-| 8 | **Animations & Micro-interactions**                          | Completion stamp, mood-based mascot, button/checkbox micro-interactions, milestone confetti   |
-| 9 | **Accessibility (WCAG 2.1 AA)**                              | Keyboard navigation, screen reader support, color contrast compliance, 44×44px touch targets  |
-| 10| **PWA Support**                                              | Service worker, offline functionality, installable on home screen                             |
-| 11| **Authentication**                                           | User registration & login (email + OAuth)                                                    |
-| 12| **Data Persistence**                                         | Cloud database (PostgreSQL via Prisma) with local storage fallback for offline               |
-| 13| **Notification / Reminders**                                 | Time-picker for habit reminders; browser notification support                                |
+| # | Feature                                                      | Details                                                                                      | EPIC |
+|---|--------------------------------------------------------------|----------------------------------------------------------------------------------------------|------|
+| 1 | **Project Foundation & Infrastructure**                      | Next.js setup, Prisma schema, PostgreSQL, CI/CD pipeline, dev tooling                        | EPIC-001 |
+| 2 | **Authentication**                                           | User registration & login (email + Google OAuth), session management, account lockout        | EPIC-002 |
+| 3 | **Category Management**                                      | Create, read, edit, reorder, and delete habit categories; default seeding on registration    | EPIC-003 |
+| 4 | **Habit Dashboard (Home) & Habit CRUD**                      | Daily habit list, interactive calendar, completion checkboxes, 3-step creation wizard, edit/delete | EPIC-004 |
+| 5 | **Smart Daily Check-in & Mood Board**                        | Modal triggered on habit completion; 6 mood options; positive path (confetti + mascot); negative path (reflection + calming activities); upsert persistence | EPIC-005 |
+| 6 | **Task Management**                                          | Task CRUD, sub-tasks (max 20), priority levels, due dates, auto-postpone, recurrence, sorting & filtering | EPIC-006 |
+| 7 | **Analytics Dashboard**                                      | Completion rate donut, line chart (weekly/monthly/yearly), streak stats, calendar heatmap with drill-down | EPIC-007 |
+| 8 | **Design System & Theming**                                  | CSS design tokens, component library, light/dark/system themes, mascot, responsive layout shell | EPIC-008 |
+| 9 | **PWA & Offline Support**                                    | Web app manifest, service worker caching, offline fallback, background sync, Lighthouse PWA ≥ 90 | EPIC-009 |
+| 10| **Security & Performance Hardening**                         | Security headers, CSP, rate limiting, bundle optimization, Lighthouse Performance ≥ 90, structured logging | EPIC-010 |
 
 #### ❌ Out of Scope (MVP 1)
 
@@ -337,6 +334,33 @@ The application is designed as a **Progressive Web App (PWA)** to deliver a nati
 | ----- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ---------------------------- | -------- | ----------- |
 | US-20 | As a new user, I want to register and log in so my data is saved across devices                          | **Given** I am on the login page<br>**When** I choose to register (email or OAuth)<br>**Then** my account is created<br>**And** I am redirected to the Home Dashboard<br>**And** I can log out and log back in with data intact | [Figma link] | NextAuth (Google, GitHub)   | Web      | [JIRA-###]  |
 | US-21 | As a user, I want my data to sync in real-time so I can switch between devices seamlessly                | **Given** I complete a habit on my phone<br>**When** I open Vora on my desktop<br>**Then** the completion and mood data are already reflected<br>**And** sync happens within 5 seconds of reconnection | [Figma link] | Cloud-first, local fallback | Web      | [JIRA-###]  |
+
+### 8.7 Category Management (EPIC-003)
+
+| ID    | User Story                                                                                              | Acceptance Criteria                                                                                                                                                                                                     | Design       | Notes                        | Platform | JIRA Ticket |
+| ----- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ---------------------------- | -------- | ----------- |
+| US-22 | As a new user, I want default categories created for me so I can start tracking habits immediately       | **Given** I complete registration<br>**When** my account is created<br>**Then** I automatically receive 4 default categories: Health, Work, Personal, Learning<br>**And** each has an icon and default color | [Figma link] | Seeded on NextAuth createUser event | Web | [JIRA-###] |
+| US-23 | As a user, I want to create a custom category so I can organize my habits by my own areas of focus      | **Given** I am in Category Management<br>**When** I click "Add Category" and enter a name, icon emoji, and color<br>**Then** the category is created and appears in the sidebar<br>**And** I can assign habits to it | [Figma link] | Max 20 categories per user  | Web      | [JIRA-###]  |
+| US-24 | As a user, I want to edit a category's name, icon, or color so I can keep my categories relevant        | **Given** I select a category to edit<br>**When** I update fields and save<br>**Then** the changes are reflected immediately in the sidebar and on all associated habit cards | [Figma link] | —                            | Web      | [JIRA-###]  |
+| US-25 | As a user, I want to reorder my categories so I can prioritize what I see first in the sidebar          | **Given** I am viewing my categories<br>**When** I drag and drop a category to a new position<br>**Then** the new order persists and appears the same on next visit | [Figma link] | Optimistic UI with rollback | Web      | [JIRA-###]  |
+| US-26 | As a user, I want to delete a category so I can remove areas I no longer track                          | **Given** I delete a non-default category<br>**When** I confirm the deletion<br>**Then** the category is removed<br>**And** its habits are reassigned to the default "Personal" category<br>**And** the category no longer appears in any selector | [Figma link] | Soft-delete; default categories cannot be deleted | Web | [JIRA-###] |
+
+### 8.8 Design System & PWA (EPIC-008, EPIC-009)
+
+| ID    | User Story                                                                                              | Acceptance Criteria                                                                                                                                                                                                     | Design       | Notes                        | Platform | JIRA Ticket |
+| ----- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ---------------------------- | -------- | ----------- |
+| US-27 | As a user, I want the app to automatically use my OS light/dark preference so it feels native           | **Given** my OS is set to dark mode<br>**When** I first open Vora<br>**Then** dark mode is active automatically<br>**And** I can override it manually in Settings | [Figma link] | `prefers-color-scheme` API  | Web      | [JIRA-###]  |
+| US-28 | As a user, I want the mascot's expression to match my mood selection so the app feels emotionally aware | **Given** I select a mood in the Check-in modal<br>**When** the mood is confirmed<br>**Then** the mascot switches to the matching expression (happy/proud/concerned/cheering) with a 300ms crossfade | [Figma link] | 4 expression states          | Web      | [JIRA-###]  |
+| US-29 | As a user, I want to install Vora on my home screen so I can launch it like a native app                | **Given** I visit Vora in Chrome or Edge<br>**When** I click "Add to Home Screen"<br>**Then** the app installs in standalone mode<br>**And** it opens without browser chrome | [Figma link] | Requires manifest.json + SW | Web      | [JIRA-###]  |
+| US-30 | As a user, I want to view my habit list offline so I can check my habits even without internet          | **Given** my device is offline<br>**When** I open Vora<br>**Then** I see the cached Home Dashboard with my last-known habits<br>**And** any completions I make are queued and sync when I reconnect | [Figma link] | Background Sync API         | Web      | [JIRA-###]  |
+
+### 8.9 Security & Performance (EPIC-010)
+
+| ID    | User Story                                                                                              | Acceptance Criteria                                                                                                                                                                                                     | Design       | Notes                        | Platform | JIRA Ticket |
+| ----- | ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ---------------------------- | -------- | ----------- |
+| US-31 | As a user, I want my account locked after repeated failed logins so my account is protected from brute-force attacks | **Given** I enter incorrect credentials 5 times<br>**When** I try again<br>**Then** I see "Too many failed attempts. Try again in 15 minutes."<br>**And** no further login attempts are accepted during the lockout | [Figma link] | BR-006; EPIC-002 + EPIC-010  | Web      | [JIRA-###]  |
+| US-32 | As a developer, I want rate limiting on API endpoints so the server is protected from abuse             | **Given** a client sends more than 100 requests/min to the general API<br>**When** the threshold is exceeded<br>**Then** the server returns HTTP 429 with a retry-after header<br>**And** legitimate requests are unaffected | — | Auth endpoints: 10 req/min  | Web      | [JIRA-###]  |
+| US-33 | As a user, I want the app to load fast so I am not frustrated waiting for content                       | **Given** I open the app on a typical connection<br>**When** the page loads<br>**Then** First Contentful Paint is < 1.5s<br>**And** Largest Contentful Paint is < 2.5s<br>**And** Cumulative Layout Shift is < 0.1 | — | Core Web Vitals targets      | Web      | [JIRA-###]  |
 
 ---
 
@@ -560,4 +584,48 @@ The application is designed as a **Progressive Web App (PWA)** to deliver a nati
 
 ---
 
-*Document generated on 2026-02-10. This PRD is a living document and should be updated as decisions are made on open questions and scope evolves.*
+## 13. Epic Traceability
+
+### 13.1 EPIC → PRD Scope Mapping
+
+| EPIC ID  | Title                                       | Size | PRD Scope Items                         | Sprint |
+| -------- | ------------------------------------------- | ---- | --------------------------------------- | ------ |
+| EPIC-001 | Setup Project Foundation & Infrastructure   | M    | Scope #1 Data Persistence, CI/CD        | 1      |
+| EPIC-002 | Implement User Authentication               | M    | Scope #11 Authentication (US-20, US-31) | 2      |
+| EPIC-003 | Build Category Management                   | S    | Scope #4 Habit Dashboard (US-22–US-26)  | 2      |
+| EPIC-004 | Build Habit Tracking Core                   | L    | Scope #2 Habit CRUD (US-01–US-05)       | 3      |
+| EPIC-005 | Implement Smart Mood Check-in               | M    | Scope #3 Smart Check-in (US-06–US-09)   | 4      |
+| EPIC-006 | Build Task Management System                | L    | Scope #4 Task Management (US-10–US-13)  | 4      |
+| EPIC-007 | Build Analytics & Insights Dashboard        | L    | Scope #5 Analytics (US-14–US-17)        | 5      |
+| EPIC-008 | Implement Design System & Theming           | M    | Scope #6–8 Design (US-18, US-27–US-28)  | 1      |
+| EPIC-009 | Enable PWA & Offline Support                | M    | Scope #10 PWA (US-29–US-30)             | 6      |
+| EPIC-010 | Harden Security & Performance               | S    | Scope #9 Accessibility, NFRs (US-32–US-33) | 6   |
+
+### 13.2 Recommended Sprint Sequence
+
+| Sprint | EPICs                   | Focus                                 |
+| ------ | ----------------------- | ------------------------------------- |
+| 1      | EPIC-001, EPIC-008      | Foundation + Design System            |
+| 2      | EPIC-002, EPIC-003      | Auth + Category Management            |
+| 3      | EPIC-004                | Habit Tracking Core                   |
+| 4      | EPIC-005, EPIC-006      | Mood Check-in + Task Management       |
+| 5      | EPIC-007                | Analytics Dashboard                   |
+| 6      | EPIC-009, EPIC-010      | PWA + Security & Performance Hardening|
+
+### 13.3 Dependency Map
+
+```
+EPIC-001 (Foundation)
+  ├──► EPIC-002 (Auth)
+  │      ├──► EPIC-003 (Categories)
+  │      │      └──► EPIC-004 (Habits) ──► EPIC-005 (Mood)
+  │      │                              └──► EPIC-007 (Analytics)
+  │      └──► EPIC-006 (Tasks)
+  ├──► EPIC-008 (Design System)
+  │      └──► EPIC-009 (PWA)
+  └──► EPIC-010 (Security/Perf)
+```
+
+---
+
+*PRD v3.0 — Updated 2026-03-25. Epic traceability added. This PRD is a living document and should be updated as decisions are made on open questions and scope evolves.*

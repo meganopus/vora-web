@@ -9,9 +9,9 @@
 | Field              | Detail                                              |
 | ------------------ | --------------------------------------------------- |
 | **Document Title** | Vora – Functional Specification Document            |
-| **Version**        | 1.0                                                 |
-| **Date**           | 2026-02-10                                          |
-| **PRD Reference**  | `prompter/vora-web-app/prd.md` v2.0                 |
+| **Version**        | 2.0                                                 |
+| **Date**           | 2026-03-25                                          |
+| **PRD Reference**  | `prd.md` v3.0                                       |
 | **Author**         | [Author Name]                                       |
 | **Reviewers**      | [Product Owner], [Tech Lead], [QA Lead]             |
 | **Status**         | Draft                                               |
@@ -65,8 +65,8 @@ This FSD translates all 21 user stories and 13 in-scope features from the PRD in
 | A-04 | OAuth credentials (Google) are configured in the deployment environment                      |
 | A-05 | The mascot is a single, pre-designed character with multiple emotional state sprites/animations |
 | A-06 | MVP 1 operates in English only                                                               |
-| A-07 | No rate limiting or abuse prevention is required for MVP 1                                   |
-| A-08 | Maximum latency for API responses shall be ≤ 500ms under normal load                        |
+| A-07 | Rate limiting is required: 100 req/min general API, 10 req/min auth endpoints (EPIC-010)     |
+| A-08 | Maximum latency for API responses shall be ≤ 200ms (P95) under normal load                  |
 
 ### 2.4 Dependencies
 
@@ -661,6 +661,210 @@ This FSD translates all 21 user stories and 13 in-scope features from the PRD in
   - [ ] Given I use a screen reader, then all content is announced correctly
   - [ ] Given I run axe-core or Lighthouse accessibility audit, then the score is ≥ 95
 
+### 4.10 Category Management (EPIC-003)
+
+#### FR-041: Create Category
+- **Priority:** Must Have
+- **PRD Reference:** US-23, EPIC-003
+- **Business Rules:**
+  - BR-156: Category name required; 1–50 characters; unique per user (BR-043 in FSD v1 scope)
+  - BR-157: Icon is a single emoji character (stored as string)
+  - BR-158: Color must be selected from the predefined 12-color palette
+  - BR-159: Maximum 20 categories per user
+- **Acceptance Criteria:**
+  - [ ] Given I enter a name, icon, and color and click "Save", then the category is created and appears in the sidebar
+  - [ ] Given I enter a name already used by one of my categories, then I see "Category name already exists"
+  - [ ] Given I have 20 categories, then the "Add Category" button is disabled with tooltip "Maximum 20 categories reached"
+
+#### FR-042: Read / List Categories
+- **Priority:** Must Have
+- **PRD Reference:** US-22, US-23, EPIC-003
+- **Business Rules:**
+  - BR-160: System SHALL seed 4 default categories (Health, Work, Personal, Learning) on new user registration via NextAuth `createUser` event
+  - BR-161: Categories SHALL be ordered by `sort_order` ascending
+  - BR-162: Soft-deleted categories SHALL be excluded from all queries
+- **Acceptance Criteria:**
+  - [ ] Given I am a new user, then I see 4 default categories immediately after registration
+  - [ ] Given I list my categories, then only non-deleted categories appear, ordered by sort_order
+  - [ ] Given I call GET /api/categories, then only the authenticated user's categories are returned (no cross-user data)
+
+#### FR-043: Edit Category
+- **Priority:** Must Have
+- **PRD Reference:** US-24, EPIC-003
+- **Business Rules:**
+  - BR-163: All fields (name, icon, color) are editable
+  - BR-164: Default system categories (seeded) may be edited by the user but not deleted
+- **Acceptance Criteria:**
+  - [ ] Given I update a category name and save, then the new name appears in the sidebar and all habit cards immediately
+  - [ ] Given I try to rename to an existing category name, then I see a uniqueness error
+
+#### FR-044: Reorder Categories
+- **Priority:** Should Have
+- **PRD Reference:** US-25, EPIC-003
+- **Business Rules:**
+  - BR-165: Drag-and-drop reorder SHALL update `sort_order` for all affected categories in a single PATCH batch call
+  - BR-166: Optimistic UI update SHALL revert to previous order if the API call fails
+- **Acceptance Criteria:**
+  - [ ] Given I drag a category to a new position, then the sidebar reorders immediately (optimistic)
+  - [ ] Given the reorder API call fails, then the order reverts to the previous state with an error toast
+
+#### FR-045: Delete Category
+- **Priority:** Must Have
+- **PRD Reference:** US-26, EPIC-003
+- **Business Rules:**
+  - BR-167: Deletion is soft-delete; sets `deletedAt` timestamp
+  - BR-168: On deletion, all habits in the deleted category SHALL be reassigned to the default "Personal" category
+  - BR-169: A confirmation dialog MUST appear before deletion
+  - BR-170: Default seeded categories (isDefault=true) CANNOT be deleted
+- **Acceptance Criteria:**
+  - [ ] Given I delete a non-default category, then its habits move to "Personal" and the category disappears from the sidebar
+  - [ ] Given I attempt to delete a default category, then the delete option is not available / disabled
+
+### 4.11 Design System & Theming Behaviors (EPIC-008)
+
+#### FR-046: CSS Design Token Application
+- **Priority:** Must Have
+- **PRD Reference:** EPIC-008
+- **Business Rules:**
+  - BR-171: All colors, spacing, typography, and shadow values SHALL be defined as CSS Custom Properties on `:root`
+  - BR-172: Dark mode values SHALL be on `[data-theme="dark"]` selector, overriding `:root` tokens
+  - BR-173: `prefers-reduced-motion: reduce` SHALL disable all non-essential animations app-wide
+- **Acceptance Criteria:**
+  - [ ] Given I toggle dark mode, then the UI switches via CSS Custom Property override with no page reload
+  - [ ] Given my OS has reduced-motion enabled, then all Framer Motion and CSS animations are disabled
+
+#### FR-047: Mascot Expression States
+- **Priority:** Should Have
+- **PRD Reference:** US-28, EPIC-008
+- **Business Rules:**
+  - BR-174: Mascot SHALL have exactly 4 expression states: happy, proud, concerned, cheering
+  - BR-175: Expression crossfade transition SHALL be 300ms
+  - BR-176: Mascot total asset size (all states) SHALL be < 200KB
+- **Acceptance Criteria:**
+  - [ ] Given I select "Happy" mood, then the mascot transitions to the happy expression within 300ms
+  - [ ] Given I select a negative mood, then the mascot transitions to the concerned expression
+  - [ ] Given reduced-motion is enabled, then expression switches instantly without transition
+
+#### FR-048: Theme Persistence
+- **Priority:** Must Have
+- **PRD Reference:** US-27, EPIC-008
+- **Business Rules:**
+  - BR-177: Theme preference SHALL be written to `localStorage` AND persisted to the User database record
+  - BR-178: On first visit with no stored preference, `prefers-color-scheme` SHALL determine initial theme
+  - BR-179: On login from a new device, theme SHALL be loaded from the DB (overrides localStorage)
+- **Acceptance Criteria:**
+  - [ ] Given I set dark mode and close/reopen the browser, then dark mode is still active
+  - [ ] Given I log in on a new device after setting dark mode elsewhere, then dark mode loads from DB
+
+### 4.12 PWA & Offline Support Behaviors (EPIC-009)
+
+#### FR-049: Web App Manifest
+- **Priority:** Must Have
+- **PRD Reference:** US-29, EPIC-009
+- **Business Rules:**
+  - BR-180: `manifest.json` SHALL include: name="Vora", short_name="Vora", icons (192×192 and 512×512), theme_color=#ED9DFF, background_color=#FFFFFF, display="standalone", start_url="/"
+- **Acceptance Criteria:**
+  - [ ] Given Lighthouse PWA audit runs, then a valid manifest is detected and the install prompt is available
+  - [ ] Given I install from Chrome, then the app opens in standalone mode without browser chrome
+
+#### FR-050: Service Worker Caching Strategy
+- **Priority:** Must Have
+- **PRD Reference:** EPIC-009
+- **Business Rules:**
+  - BR-181: Static assets (CSS, JS, fonts, images) SHALL use cache-first strategy
+  - BR-182: API responses SHALL use network-first strategy with cache fallback
+  - BR-183: Cache SHALL be versioned and invalidated on new deployments
+- **Acceptance Criteria:**
+  - [ ] Given I visit the app for the first time, then all static assets are cached by the service worker
+  - [ ] Given I disconnect from the internet and reload, then the cached shell renders
+
+#### FR-051: Offline Fallback & Background Sync
+- **Priority:** Must Have
+- **PRD Reference:** US-30, EPIC-009
+- **Business Rules:**
+  - BR-184: The offline fallback page SHALL display the mascot and message: "You're offline — we'll sync when you're back!"
+  - BR-185: Habit completions made while offline SHALL be queued in IndexedDB and replayed via Background Sync API when connectivity is restored
+- **Acceptance Criteria:**
+  - [ ] Given I am offline and navigate to a non-cached route, then the offline fallback page is shown
+  - [ ] Given I mark a habit complete while offline, then it syncs automatically when I reconnect
+  - [ ] Given Lighthouse PWA audit runs, then the score is ≥ 90
+
+### 4.13 Security & Performance (EPIC-010)
+
+#### FR-052: HTTP Security Headers
+- **Priority:** Must Have
+- **PRD Reference:** US-32, EPIC-010
+- **Business Rules:**
+  - BR-186: `next.config.js` SHALL set: `X-Frame-Options: SAMEORIGIN`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`
+  - BR-187: Content Security Policy SHALL allow Google OAuth and Google Fonts; block inline scripts from external sources
+- **Acceptance Criteria:**
+  - [ ] Given I run a security headers audit (e.g., securityheaders.com), then all required headers are present
+  - [ ] Given CSP is applied, then Google OAuth login still works correctly
+
+#### FR-053: API Rate Limiting
+- **Priority:** Must Have
+- **PRD Reference:** US-32, EPIC-010
+- **Business Rules:**
+  - BR-188: General API endpoints SHALL be rate-limited to 100 requests/minute per IP
+  - BR-189: Authentication endpoints (`/api/auth/*`) SHALL be rate-limited to 10 requests/minute per IP
+  - BR-190: Rate limit exceeded SHALL return HTTP 429 with `Retry-After` header
+- **Acceptance Criteria:**
+  - [ ] Given a client exceeds 100 req/min on a general endpoint, then subsequent requests receive 429
+  - [ ] Given a client exceeds 10 req/min on `/api/auth/login`, then subsequent attempts receive 429
+
+#### FR-054: Bundle Size & Performance Optimization
+- **Priority:** Must Have
+- **PRD Reference:** US-33, EPIC-010
+- **Business Rules:**
+  - BR-191: Main JS bundle SHALL be < 150KB gzipped
+  - BR-192: Recharts and Framer Motion SHALL be lazy-loaded (dynamic imports, not in initial bundle)
+  - BR-193: All images and mascot assets SHALL use `next/image` with appropriate `sizes` and `loading` attributes
+- **Acceptance Criteria:**
+  - [ ] Given I run `next build --analyze`, then the initial JS chunk is < 150KB gzipped
+  - [ ] Given I view the Analytics page, then Recharts is loaded lazily (not in the initial network waterfall)
+
+#### FR-055: Lighthouse Performance Targets
+- **Priority:** Must Have
+- **PRD Reference:** US-33, EPIC-010
+- **Business Rules:**
+  - BR-194: Lighthouse Performance score ≥ 90 on Home Dashboard (production build on Vercel Preview)
+  - BR-195: Lighthouse Accessibility score ≥ 90 on all pages
+  - BR-196: Core Web Vitals: FCP < 1.5s, LCP < 2.5s, CLS < 0.1
+- **Acceptance Criteria:**
+  - [ ] Given a Lighthouse CI run on the Home Dashboard, then Performance ≥ 90 and Accessibility ≥ 90
+  - [ ] Given Chrome DevTools, then FCP < 1.5s and LCP < 2.5s on a simulated Fast 3G connection
+
+#### FR-056: Structured Logging & Health Check
+- **Priority:** Must Have
+- **PRD Reference:** EPIC-010
+- **Business Rules:**
+  - BR-197: All API route handlers SHALL use `pino` for structured JSON logging (level, timestamp, requestId, userId, path)
+  - BR-198: `GET /api/health` SHALL return HTTP 200 with `{status: "ok", db: "connected"}` when healthy, and 503 when DB is unreachable
+- **Acceptance Criteria:**
+  - [ ] Given an API call is made, then a JSON log entry appears in the server console with all required fields
+  - [ ] Given the DB is reachable, then GET /api/health returns 200 `{status: "ok"}`
+
+#### FR-057: Row-Level Security Audit
+- **Priority:** Must Have
+- **PRD Reference:** EPIC-010
+- **Business Rules:**
+  - BR-199: Every Prisma query returning user-owned data SHALL include `where: { userId: session.user.id }` as a non-bypassable filter
+  - BR-200: No API response SHALL include another user's data (passwords, habits, tasks, mood data)
+- **Acceptance Criteria:**
+  - [ ] Given I craft an API request for another user's resource ID, then I receive 404 (not 403, to avoid enumeration)
+  - [ ] Given I audit all GET endpoints, then no response contains data from a different userId
+
+#### FR-058: Input Sanitization & Validation
+- **Priority:** Must Have
+- **PRD Reference:** EPIC-010
+- **Business Rules:**
+  - BR-201: All API route inputs SHALL be validated with a Zod schema before any business logic or DB query executes
+  - BR-202: Prisma parameterized queries protect against SQL injection by default; no raw SQL with user input is permitted
+  - BR-203: Error responses SHALL use the `AppError` class and `withErrorHandling` wrapper; no raw stack traces are exposed
+- **Acceptance Criteria:**
+  - [ ] Given an API receives malformed input, then it returns 400 with a structured Zod error response
+  - [ ] Given any unhandled exception occurs, then the client receives a generic 500 message (no stack trace)
+
 ---
 
 ## 5. Business Rules Catalog
@@ -876,16 +1080,48 @@ Category (1) ──< (N) Habit
 
 ---
 
-## 8. Non-Functional Considerations
+## 8. Non-Functional Requirements (EPIC-010)
 
-| Area               | Requirement                                                                    | Impact on Functionality                              |
-| ------------------ | ------------------------------------------------------------------------------ | ---------------------------------------------------- |
-| **Performance**    | LCP < 2 seconds; animations at 60fps                                          | Lazy-load charts; optimize bundle size; use code splitting |
-| **Security**       | JWT tokens in HTTP-only cookies; CSRF protection; input sanitization            | All API endpoints validate auth; XSS prevention      |
-| **Accessibility**  | WCAG 2.1 AA; keyboard navigation; screen reader support; 44×44px targets       | All interactive elements must meet standards (FR-040) |
-| **Scalability**    | Support 1,000 DAU at launch with room for 10× growth                          | Connection pooling; efficient queries; CDN for assets |
-| **Privacy**        | Mood/reflection data encrypted at rest; clear data deletion pathway             | Soft-delete with hard-delete scheduled purge          |
-| **Reliability**    | Offline-first architecture; graceful degradation                               | Service worker + IndexedDB queue (FR-035, FR-036)    |
+This section formally captures all non-functional requirements from EPIC-010 (Harden Security & Performance). These requirements are cross-cutting and apply to all feature EPICs.
+
+### 8.1 Performance Targets
+
+| NFR ID  | Requirement                                              | Target              | Measurement Method         | FSD Reference |
+| ------- | -------------------------------------------------------- | ------------------- | -------------------------- | ------------- |
+| NFR-001 | First Contentful Paint (FCP)                             | < 1.5 seconds       | Lighthouse CI, Web Vitals  | FR-055        |
+| NFR-002 | Largest Contentful Paint (LCP)                           | < 2.5 seconds       | Lighthouse CI, Web Vitals  | FR-055        |
+| NFR-003 | Cumulative Layout Shift (CLS)                            | < 0.1               | Lighthouse CI, Web Vitals  | FR-055        |
+| NFR-004 | API Response Time (P95)                                  | < 200ms             | Server logs (pino)         | FR-056        |
+| NFR-005 | Initial JS Bundle Size                                   | < 150KB gzipped     | next build --analyze       | FR-054        |
+| NFR-006 | Lighthouse Performance Score                             | ≥ 90                | Lighthouse CI              | FR-055        |
+| NFR-007 | Lighthouse Accessibility Score                           | ≥ 90 (target 95)    | Lighthouse CI              | FR-040        |
+| NFR-008 | Lighthouse PWA Score                                     | ≥ 90                | Lighthouse CI              | FR-049        |
+
+### 8.2 Security Requirements
+
+| NFR ID  | Requirement                                              | Implementation                   | FSD Reference |
+| ------- | -------------------------------------------------------- | -------------------------------- | ------------- |
+| NFR-009 | HTTP Security Headers                                    | next.config.js headers()         | FR-052        |
+| NFR-010 | Content Security Policy (CSP)                            | Allowlist for Google, fonts      | FR-052        |
+| NFR-011 | Rate Limiting — General API                              | 100 req/min per IP               | FR-053        |
+| NFR-012 | Rate Limiting — Auth Endpoints                           | 10 req/min per IP                | FR-053        |
+| NFR-013 | Input Validation                                         | Zod schema on all routes         | FR-058        |
+| NFR-014 | Row-Level Security                                       | userId filter on all queries     | FR-057        |
+| NFR-015 | Password Hashing                                         | bcrypt (12 rounds)               | FR-001        |
+| NFR-016 | Session Security                                         | JWT in HTTP-only cookies, 30-day | FR-003, FR-005|
+| NFR-017 | No Raw SQL with User Input                               | Prisma parameterized queries     | FR-058        |
+| NFR-018 | No Stack Traces in Error Responses                       | AppError + withErrorHandling     | FR-058        |
+
+### 8.3 Reliability & Privacy
+
+| NFR ID  | Requirement                                              | Implementation                   | FSD Reference |
+| ------- | -------------------------------------------------------- | -------------------------------- | ------------- |
+| NFR-019 | Offline-First Architecture                               | Service worker + IndexedDB queue | FR-035, FR-036, FR-051 |
+| NFR-020 | Offline Sync Conflict Resolution                         | Last-write-wins via server timestamp | FR-036    |
+| NFR-021 | Mood/Reflection Data Encryption at Rest                  | PostgreSQL encryption; Vercel infra | Data Architecture |
+| NFR-022 | Soft-Delete Data Retention                               | 90-day retention policy; manual purge script | FR-009, FR-026 |
+| NFR-023 | Structured Logging                                       | pino JSON logs on all API routes | FR-056        |
+| NFR-024 | Health Check Endpoint                                    | GET /api/health → DB connectivity | FR-056       |
 
 ---
 
@@ -901,35 +1137,68 @@ Category (1) ──< (N) Habit
 
 ---
 
-## 10. Traceability Matrix
+## 10. EPIC-to-FR Traceability Matrix
 
-| PRD Item               | FSD Requirement(s)                           | Priority    |
-| ---------------------- | -------------------------------------------- | ----------- |
-| US-01 (Create Habit)   | FR-006                                       | Must Have   |
-| US-02 (Complete Habit) | FR-010, FR-015, FR-016, FR-017, FR-018       | Must Have   |
-| US-03 (Category Filter)| FR-007, FR-012                               | Must Have   |
-| US-04 (Edit/Delete)    | FR-008, FR-009                               | Must Have   |
-| US-05 (Reminders)      | FR-014                                       | Must Have   |
-| US-06 (Mood Select)    | FR-015, FR-016, FR-019                       | Must Have   |
-| US-07 (Positive Path)  | FR-017                                       | Must Have   |
-| US-08 (Negative Path)  | FR-018                                       | Must Have   |
-| US-09 (Skip Check-in)  | FR-015 (BR-057, BR-058)                      | Must Have   |
-| US-10 (Create Task)    | FR-020, FR-024                               | Must Have   |
-| US-11 (Complete Task)  | FR-021                                       | Must Have   |
-| US-12 (Auto-Postpone)  | FR-022                                       | Must Have   |
-| US-13 (Filter/Sort)    | FR-023                                       | Must Have   |
-| US-14 (Completion Rate)| FR-027                                       | Must Have   |
-| US-15 (Line Chart)     | FR-028                                       | Must Have   |
-| US-16 (Streak Stats)   | FR-029                                       | Must Have   |
-| US-17 (Heatmap)        | FR-030                                       | Must Have   |
-| US-18 (Theme Toggle)   | FR-031                                       | Must Have   |
-| US-19 (Habit Colors)   | FR-032                                       | Must Have   |
-| US-20 (Auth)           | FR-001, FR-002, FR-003, FR-004               | Must Have   |
-| US-21 (Data Sync)      | FR-005, FR-036                               | Must Have   |
-| Scope 6 (Responsive)   | FR-033, FR-034                               | Must Have   |
-| Scope 8 (Animations)   | FR-037, FR-038, FR-039                       | Should Have |
-| Scope 9 (Accessibility)| FR-040                                       | Must Have   |
-| Scope 10 (PWA)         | FR-035                                       | Must Have   |
+### 10.1 PRD User Story → FSD Requirement Mapping (Full)
+
+| PRD User Story           | FSD Requirement(s)                              | Priority    | EPIC     |
+| ------------------------ | ----------------------------------------------- | ----------- | -------- |
+| US-01 (Create Habit)     | FR-006                                          | Must Have   | EPIC-004 |
+| US-02 (Complete Habit)   | FR-010, FR-015, FR-016, FR-017, FR-018          | Must Have   | EPIC-004 |
+| US-03 (Category Filter)  | FR-007, FR-012                                  | Must Have   | EPIC-004 |
+| US-04 (Edit/Delete)      | FR-008, FR-009                                  | Must Have   | EPIC-004 |
+| US-05 (Reminders)        | FR-014                                          | Must Have   | EPIC-004 |
+| US-06 (Mood Select)      | FR-015, FR-016, FR-019                          | Must Have   | EPIC-005 |
+| US-07 (Positive Path)    | FR-017                                          | Must Have   | EPIC-005 |
+| US-08 (Negative Path)    | FR-018                                          | Must Have   | EPIC-005 |
+| US-09 (Skip Check-in)    | FR-015 (BR-057, BR-058)                         | Must Have   | EPIC-005 |
+| US-10 (Create Task)      | FR-020, FR-024                                  | Must Have   | EPIC-006 |
+| US-11 (Complete Task)    | FR-021                                          | Must Have   | EPIC-006 |
+| US-12 (Auto-Postpone)    | FR-022                                          | Must Have   | EPIC-006 |
+| US-13 (Filter/Sort)      | FR-023                                          | Must Have   | EPIC-006 |
+| US-14 (Completion Rate)  | FR-027                                          | Must Have   | EPIC-007 |
+| US-15 (Line Chart)       | FR-028                                          | Must Have   | EPIC-007 |
+| US-16 (Streak Stats)     | FR-029                                          | Must Have   | EPIC-007 |
+| US-17 (Heatmap)          | FR-030                                          | Must Have   | EPIC-007 |
+| US-18 (Theme Toggle)     | FR-031                                          | Must Have   | EPIC-008 |
+| US-19 (Habit Colors)     | FR-032                                          | Must Have   | EPIC-008 |
+| US-20 (Auth)             | FR-001, FR-002, FR-003, FR-004                  | Must Have   | EPIC-002 |
+| US-21 (Data Sync)        | FR-005, FR-036                                  | Must Have   | EPIC-002 |
+| US-22 (Default Categories)| FR-042                                         | Must Have   | EPIC-003 |
+| US-23 (Create Category)  | FR-041                                          | Must Have   | EPIC-003 |
+| US-24 (Edit Category)    | FR-043                                          | Must Have   | EPIC-003 |
+| US-25 (Reorder Category) | FR-044                                          | Should Have | EPIC-003 |
+| US-26 (Delete Category)  | FR-045                                          | Must Have   | EPIC-003 |
+| US-27 (OS Theme Pref)    | FR-048                                          | Must Have   | EPIC-008 |
+| US-28 (Mascot Expression)| FR-047                                          | Should Have | EPIC-008 |
+| US-29 (PWA Install)      | FR-049                                          | Must Have   | EPIC-009 |
+| US-30 (Offline Habits)   | FR-050, FR-051                                  | Must Have   | EPIC-009 |
+| US-31 (Account Lockout)  | FR-003 (BR-006), FR-053                         | Must Have   | EPIC-010 |
+| US-32 (Rate Limiting)    | FR-053                                          | Must Have   | EPIC-010 |
+| US-33 (Fast Loading)     | FR-054, FR-055                                  | Must Have   | EPIC-010 |
+| Responsive Layout        | FR-033, FR-034                                  | Must Have   | EPIC-008 |
+| CSS Token System         | FR-046                                          | Must Have   | EPIC-008 |
+| Animations               | FR-037, FR-038, FR-039                          | Should Have | EPIC-008 |
+| Accessibility WCAG 2.1 AA| FR-040                                          | Must Have   | EPIC-008 |
+| Security Headers         | FR-052                                          | Must Have   | EPIC-010 |
+| Row-Level Security       | FR-057                                          | Must Have   | EPIC-010 |
+| Input Validation         | FR-058                                          | Must Have   | EPIC-010 |
+| Structured Logging       | FR-056                                          | Must Have   | EPIC-010 |
+
+### 10.2 EPIC → FR Coverage Summary
+
+| EPIC ID  | Title                                        | FRs Covered                                        |
+| -------- | -------------------------------------------- | -------------------------------------------------- |
+| EPIC-001 | Setup Project Foundation & Infrastructure    | (Non-functional; covered by EPIC-010 audit)        |
+| EPIC-002 | Implement User Authentication                | FR-001, FR-002, FR-003, FR-004, FR-005             |
+| EPIC-003 | Build Category Management                    | FR-041, FR-042, FR-043, FR-044, FR-045             |
+| EPIC-004 | Build Habit Tracking Core                    | FR-006, FR-007, FR-008, FR-009, FR-010, FR-011, FR-012, FR-013, FR-014 |
+| EPIC-005 | Implement Smart Mood Check-in                | FR-015, FR-016, FR-017, FR-018, FR-019             |
+| EPIC-006 | Build Task Management System                 | FR-020, FR-021, FR-022, FR-023, FR-024, FR-025, FR-026 |
+| EPIC-007 | Build Analytics & Insights Dashboard         | FR-027, FR-028, FR-029, FR-030                     |
+| EPIC-008 | Implement Design System & Theming            | FR-031, FR-032, FR-033, FR-034, FR-037, FR-038, FR-039, FR-040, FR-046, FR-047, FR-048 |
+| EPIC-009 | Enable PWA & Offline Support                 | FR-035, FR-036, FR-049, FR-050, FR-051             |
+| EPIC-010 | Harden Security & Performance                | FR-052, FR-053, FR-054, FR-055, FR-056, FR-057, FR-058 |
 
 ---
 
@@ -952,9 +1221,10 @@ Category (1) ──< (N) Habit
 
 ### B. Revision History
 
-| Version | Date       | Author        | Changes                     |
-| ------- | ---------- | ------------- | --------------------------- |
-| 1.0     | 2026-02-10 | [Author Name] | Initial FSD from PRD v2.0   |
+| Version | Date       | Author        | Changes                                                                    |
+| ------- | ---------- | ------------- | -------------------------------------------------------------------------- |
+| 1.0     | 2026-02-10 | [Author Name] | Initial FSD from PRD v2.0                                                  |
+| 2.0     | 2026-03-25 | [Author Name] | Added FR-041–FR-058 (Category, Design System, PWA, Security); updated NFR section; added EPIC-to-FR traceability matrix; synced with PRD v3.0 |
 
 ### C. Open Questions / TBD Items
 
@@ -973,4 +1243,4 @@ Category (1) ──< (N) Habit
 
 ---
 
-*Document generated on 2026-02-10. This FSD is derived from PRD v2.0 and shall be updated as open questions are resolved and design specifications are finalized.*
+*FSD v2.0 — Updated 2026-03-25. Derived from PRD v3.0. Synced with EPIC-001 through EPIC-010. Shall be updated as open questions are resolved and design specifications are finalized.*
