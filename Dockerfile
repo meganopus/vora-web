@@ -12,7 +12,6 @@ RUN bun install
 
 # Generate Prisma client
 RUN bunx prisma generate
-RUN bunx prisma migrate deploy
 
 
 # ── Stage 2: Builder ───────────────────────────────────────────────────────────
@@ -30,6 +29,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV SKIP_ENV_VALIDATION=1
 # Cap Node.js heap to avoid silent OOM kill during webpack compilation
 ENV NODE_OPTIONS="--max-old-space-size=2048"
+RUN bunx prisma migrate deploy
 RUN bun run build
 
 
