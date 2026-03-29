@@ -12,6 +12,7 @@ RUN bun install
 
 # Generate Prisma client
 RUN bunx prisma generate
+RUN bunx prisma migrate deploy
 
 
 # ── Stage 2: Builder ───────────────────────────────────────────────────────────
@@ -69,4 +70,4 @@ ENV HOSTNAME="0.0.0.0"
 #
 # Run migrations then start the server.
 # prisma migrate deploy is idempotent — safe to run on every container start.
-CMD ["sh", "-c", "bunx prisma migrate deploy && bun server.js"]
+CMD ["sh", "-c", "bun server.js"]
