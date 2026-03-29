@@ -38,6 +38,7 @@
     "@prisma/adapter-libsql": "^7.6.0",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
+    "prisma": "^7.3.0",
     "@t3-oss/env-nextjs": "^0.13.10",
     "@tanstack/react-query": "^5.90.20",
     "@tanstack/react-query-devtools": "^5.91.3",
@@ -91,7 +92,6 @@
     "lighthouse": "^12.8.2",
     "lint-staged": "^16.2.7",
     "prettier": "^3.8.1",
-    "prisma": "^7.3.0",
     "typescript": "5.9.3",
     "vitest": "^4.0.18"
   }

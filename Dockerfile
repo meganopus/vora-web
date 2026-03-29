@@ -49,10 +49,11 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy prisma schema for runtime migrations
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+# Copy prisma schema + migrations for runtime migrate deploy
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
 
 USER nextjs
 
@@ -63,4 +64,7 @@ ENV HOSTNAME="0.0.0.0"
 
 # SQLite db is stored in /app/data — mount this as a volume in Coolify
 # DATABASE_URL should be set to: file:/app/data/prod.db
-CMD ["bun", "server.js"]
+#
+# Run migrations then start the server.
+# prisma migrate deploy is idempotent — safe to run on every container start.
+CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && bun server.js"]
