@@ -29,7 +29,6 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV SKIP_ENV_VALIDATION=1
 # Cap Node.js heap to avoid silent OOM kill during webpack compilation
 ENV NODE_OPTIONS="--max-old-space-size=2048"
-RUN bunx prisma migrate deploy
 RUN bun run build
 
 
@@ -53,10 +52,12 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Copy prisma schema + migrations for runtime migrate deploy
+COPY --from=builder --chown=nextjs:nodejs /app/prisma.config.ts ./
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_modules/prisma
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/valibot ./node_modules/valibot
 
 USER nextjs
 
@@ -70,4 +71,4 @@ ENV HOSTNAME="0.0.0.0"
 #
 # Run migrations then start the server.
 # prisma migrate deploy is idempotent — safe to run on every container start.
-CMD ["sh", "-c", "bun server.js"]
+CMD ["sh", "-c", "bunx prisma migrate deploy && bun server.js"]
