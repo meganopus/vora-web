@@ -69,4 +69,4 @@ ENV HOSTNAME="0.0.0.0"
 #
 # Run migrations then start the server.
 # prisma migrate deploy is idempotent — safe to run on every container start.
-CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy --schema=prisma/schema.prisma && bun server.js"]
+CMD ["sh", "-c", "bunx prisma migrate deploy && bun server.js"]
