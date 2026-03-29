@@ -38,9 +38,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Create a non-root user for security
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
+# Create a non-root user for security (Debian-style commands)
+RUN groupadd --system --gid 1001 nodejs && \
+    useradd --system --uid 1001 --gid nodejs nextjs
 
 # Create the data directory for SQLite and set ownership
 RUN mkdir -p /app/data && chown nextjs:nodejs /app/data
