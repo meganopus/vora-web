@@ -3,8 +3,8 @@ FROM oven/bun:1 AS deps
 
 WORKDIR /app
 
-# Copy lockfiles for better layer caching
-COPY package.json bun.lock* package-lock.json* ./
+# Copy package.json only — bun resolves fresh (no package-lock.json to avoid stale lockfile issues)
+COPY package.json bun.lock* ./
 COPY prisma ./prisma/
 
 # Install all dependencies (including dev deps for build)
@@ -27,6 +27,8 @@ COPY . .
 # Build the Next.js app
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV SKIP_ENV_VALIDATION=1
+# Cap Node.js heap to avoid silent OOM kill during webpack compilation
+ENV NODE_OPTIONS="--max-old-space-size=2048"
 RUN bun run build
 
 
